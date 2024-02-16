@@ -6,8 +6,11 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
+  phone: { type: String, required: true },
+  country: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   rol: {type: String, required: true, default: "user"},
+  favorites: { type: [mongoose.Schema.Types.ObjectId], ref: 'Product', default: [] },
 });
 
 UserSchema.pre('save', function (next) {
