@@ -6,7 +6,7 @@ Este repositorio contiene el código del backend y el frontend de mi aplicación
 
 Para clonar el proyecto, puedes usar el siguiente comando en tu terminal:
 
-git clone <[url-del-repositorio](https://github.com/JustKillu/WebInventario)>
+git clone https://github.com/JustKillu/WebInventario
 
 ## Configurar la base de datos MongoDB
 
