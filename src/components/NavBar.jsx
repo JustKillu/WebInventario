@@ -3,14 +3,8 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [user, setUser] = useState(localStorage.getItem('user'));
-  
-
   const [role, setRole] = useState(localStorage.getItem('rol'));
-  
-  // Estado para controlar la apertura de la barra de navegación.
   const [isNavOpen, setIsNavOpen] = useState(false);
-  
-  // Estado para controlar la apertura del menú de inicio de sesión.
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   
   let timeoutId;
@@ -19,7 +13,6 @@ const Navbar = () => {
     const newUser = localStorage.getItem('user');
     const newRole = localStorage.getItem('rol');
   
-    // Si el usuario en localStorage es diferente al estado del usuario, actualiza el estado del usuario.
     if (user !== newUser) {
       setUser(newUser);
     }
@@ -29,8 +22,7 @@ const Navbar = () => {
   });
   
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('rol');
+    localStorage.clear();
     setUser(null);
     setRole(null);
   };
@@ -45,7 +37,6 @@ const Navbar = () => {
       setIsLoginOpen(false);
     }, 500);
   };
-
   return (
     <nav className="flex items-center justify-between p-6">
       <div className="flex items-center flex-shrink-0 mr-6">
