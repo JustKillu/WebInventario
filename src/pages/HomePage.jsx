@@ -12,7 +12,30 @@ function HomePage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
+  const [favorites, setFavorites] = useState([]);
+  const userRole = localStorage.getItem('rol');
+//handle añadir favoritos
+  const handleFavoriteClick = async (product) => {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('id');
+      const response = await fetch(`http://localhost:3001/user/favorites`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: userId, productId: product._id })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      loadFavorites();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
+//handle para borrar favoritos
   const handleDeleteClick = (product) => {
     setProductToDelete(product);
     setShowConfirmModal(true);
@@ -25,7 +48,35 @@ function HomePage() {
     const updatedProducts = products.filter(product => product._id !== productToDelete._id);
     setProducts(updatedProducts);
   };
+//handle cargar lista de favoritos
+  const loadFavorites = async () => {
+    try {
+      let token = localStorage.getItem('token');
+      let userId = localStorage.getItem('id');
 
+
+      while (!token || !userId) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        token = localStorage.getItem('token');
+        userId = localStorage.getItem('id');
+      }
+
+      const response = await fetch(`http://localhost:3001/user/${userId}/favorites`, {
+
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      setFavorites(data.favorites);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+
+  useEffect(() => {
+    loadFavorites();
+  }, []); 
+  //Renderizar productos
   useEffect(() => {
     fetch('http://localhost:3001/products')
       .then(response => response.json())
@@ -38,7 +89,7 @@ function HomePage() {
         setLoading(false);
       });
   }, []);
-
+//handle para crear  productos
   const handleCreate = (product) => {
     fetch('http://localhost:3001/products', {
       method: 'POST',
@@ -55,6 +106,7 @@ function HomePage() {
         console.error('Error:', error);
       });
   }
+  //handle para borrar productos
   const deleteProduct = (id) => {
     fetch(`http://localhost:3001/products/${id}`, {
       method: 'DELETE',
@@ -71,7 +123,7 @@ function HomePage() {
       });
   };
 
-
+//handle para actualizar productos
   const handleUpdate = (product) => {
     fetch(`http://localhost:3001/products/${product._id}`, {
       method: 'PUT',
@@ -99,8 +151,10 @@ function HomePage() {
   }
   return (
     <div className="p-4">
-      <SearchBar products={products} setFilteredProducts={setFilteredProducts} />
-      <ProductForm onSubmit={handleCreate} />
+      <SearchBar products={products} setFilteredProducts={setFilteredProducts} loadFavorites={loadFavorites}/>
+      <div>
+        {userRole === 'adm' && <ProductForm onSubmit={handleCreate} />}
+      </div>
 
       {/* Estado que contiene la información del producto que se está mostrando en detalle. Si es null, no se muestra nada. */}
       {showDetails && (
@@ -142,33 +196,41 @@ function HomePage() {
         </div>
 
       )}
-  {/* Estado que contiene la lista de productos y filtro.  */}
+
+      {/* Estado que contiene la lista de productos y filtro.  */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-screen-xl mx-auto p-4">
-        {filteredProducts.map(product => (
-          <div key={product._id} className="flex flex-col items-start border p-4 mb-4 rounded shadow-lg h-auto w-full overflow-hidden bg-white text-left">
-            <div className="h-48 w-full overflow-auto relative group cursor-pointer" onClick={() => setShowDetails(product)}>
-              <img src={product.image} alt={product.name} className="object-cover h-full w-full transition-opacity group-hover:opacity-80" />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-opacity">
-                <span className="text-white text-lg group-hover:block hidden">Ver detalles</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <h2 className="text-xl font-bold text-blue-500 truncate hover:text-blue-800 cursor-pointer transition-colors duration-200" onClick={() => setShowDetails(product)}>{product.name}</h2>
-              <p className="text-lg text-green-500 truncate">Precio: {product.price}</p>
-              <p className="text-sm text-red-500 truncate">Cantidad disponible: {product.quantity}</p>
-              <p className="text-sm text-purple-500 truncate">Categoría: {product.category}</p>
-            </div>
-
-            {rol === 'adm' && (
-  <div className="mt-4">
-    <button onClick={() => setSelectedProduct(product)} className="px-2 py-1 bg-blue-500 text-white rounded transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-110">Editar</button>
-    <button onClick={() => handleDeleteClick(product)} className="px-2 py-1 ml-2 bg-red-500 text-white rounded transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-110">Eliminar</button>
-  </div>
-)}
-
+  {filteredProducts.map(product => (
+    <div key={product._id + favorites.includes(product._id)} className="flex flex-col items-start border p-4 mb-4 rounded shadow-lg h-auto w-full overflow-hidden bg-white text-left">
+      <div className="h-48 w-full overflow-auto relative group cursor-pointer" onClick={() => setShowDetails(product)}>
+        <img src={product.image} alt={product.name} className={`object-cover h-full w-full transition-opacity ${product.quantity === 0 ? 'opacity-50' : 'group-hover:opacity-80'}`} />
+        {product.quantity === 0 ? (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <span className="text-white text-lg">Agotado</span>
           </div>
-        ))}
-          {/* Estado que contiene la confirmacion  */}
+        ) : (
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-opacity">
+            <span className="text-white text-lg group-hover:block hidden">Ver detalles</span>
+          </div>
+        )}
+      </div>
+      <div className="mt-4">
+        <h2 className="text-xl font-bold text-blue-500 truncate hover:text-blue-800 cursor-pointer transition-colors duration-200" onClick={() => setShowDetails(product)}>{product.name}</h2>
+        <p className="text-lg text-green-500 truncate">Precio: {product.price}</p>
+        <p className="text-sm text-red-500 truncate">Cantidad disponible: {product.quantity > 0 ? product.quantity : 'Agotado'}</p>
+        <p className="text-sm text-purple-500 truncate">Categoría: {product.category}</p>
+      </div>
+      <button onClick={() => handleFavoriteClick(product)} className={`mt-2 transition-transform duration-200 ${favorites.includes(product._id) ? 'text-yellow-500 transform scale-150' : 'text-gray-500'}`}>
+        ⭐
+      </button>
+      {rol === 'adm' && (
+        <div className="mt-4">
+          <button onClick={() => setSelectedProduct(product)} className="px-2 py-1 bg-blue-500 text-white rounded transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-110">Editar</button>
+          <button onClick={() => handleDeleteClick(product)} className="px-2 py-1 ml-2 bg-red-500 text-white rounded transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-110">Eliminar</button>
+        </div>
+      )}
+    </div>
+  ))}
+        {/* Estado que contiene la confirmacion  */}
         {showConfirmModal && (
           <div className="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -194,7 +256,7 @@ function HomePage() {
             </div>
           </div>
         )}
-          {/* Estado que contiene la confirmacion luego de darle eliminar */}
+        {/* Estado que contiene la confirmacion luego de darle eliminar */}
         {showSuccessModal && (
           <div className="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
