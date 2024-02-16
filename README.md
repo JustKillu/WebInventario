@@ -20,7 +20,7 @@ Este proyecto utiliza MongoDB como base de datos. Para configurar MongoDB, sigue
 
 Para iniciar el servidor, navega hasta la carpeta del servidor en tu terminal y ejecuta el siguiente comando:
 
-\`\`\`bash
+\`\`\`
 node servidor.js
 \`\`\`
 
@@ -30,7 +30,7 @@ El servidor debería comenzar a ejecutarse en `http://localhost:3001`.
 
 Para iniciar el frontend, navega hasta la carpeta del frontend en tu terminal y ejecuta el siguiente comando:
 
-\`\`\`bash
+\`\`\`
 npm run dev
 \`\`\`
 
